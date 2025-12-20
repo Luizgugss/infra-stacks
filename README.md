@@ -7,6 +7,7 @@ This repository serves as the definitive **Infrastructure-as-Code (IaC)** catalo
 * **Resource-efficient:** Tuned for high performance on standard VPS hardware _(Hetzner, DigitalOcean)_.
 * **Production-validated:** Currently powering live applications with real traffic.
 
+
 ## The Stack Catalog
 
 | Stack | Category | Description |
@@ -26,12 +27,25 @@ This repository serves as the definitive **Infrastructure-as-Code (IaC)** catalo
 
 ## Deployment Guide
 
+## Prerequisite: Shared Network
+Before deploying any stack, you must create the external network that allows Traefik to route traffic to your containers.
+
+Run this command on your host (via SSH):
+
+```bash
+docker network create proxy
+```
+
+**Note:** In Portainer, you can also create this manually under the "Networks" tab _(Name: proxy, Driver: bridge)_.
+
 ### Option A: Using Portainer (recommended)
 
-1.  Navigate to the folder of the desired stack (e.g., `chatwoot/`).
-2.  Copy the content of `docker-compose.yml`.
-3.  Create a new **Stack** in Portainer.
-4.  Paste the content and define the **Environment Variables** listed in that stack's README.
+1. Navigate to the folder of the desired stack (e.g., chatwoot/).
+2. Copy the content of docker-compose.yml.
+3. Create a new Stack in Portainer.
+4. Paste the content.
+5. Define the Environment Variables (listed in that stack's README) in the "Environment variables" section of Portainer.
+6. Deploy the stack.
 
 ### Option B: Using Docker CLI
 1.  Clone the repository:
@@ -45,11 +59,14 @@ This repository serves as the definitive **Infrastructure-as-Code (IaC)** catalo
     # Create .env file with required variables first
     docker-compose up -d
     ```
-3.  Good luck.
+3.  Check if containers are running
+    ```
+    docker-compose ps
+    ```
 
 ## Environment Variables
 
-Every folder in **[folder](/stacks/)** have a `README.md` with it environment variable.
+Each **[stack directory](/stacks/)** contains its own `README.md` detailing the specific Environment Variables required for that service. Please check the documentation inside each folder before deploying.
 
 ## License
 This project is open-sourced software licensed under the MIT license.
