@@ -1,0 +1,220 @@
+# Prometheus Alert Rules - Production Ready
+# Copy this file to prometheus/alert-rules.yml
+# Register it in prometheus.yml with: rule_files: ["alert-rules.yml"]
+
+groups:
+  - name: system_alerts
+    interval: 1m
+    rules:
+      # CPU Alerts
+      - alert: HighCPUUsage
+        expr: |
+          (100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 75
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ printf \"%.2f\" $value }}% (threshold: 75%). Instance: {{ $labels.instance }}"
+
+      - alert: CriticalCPUUsage
+        expr: |
+          (100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 90
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CRITICAL CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ printf \"%.2f\" $value }}% (threshold: 90%). Immediate investigation required."
+
+      # Memory Alerts
+      - alert: HighMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ printf \"%.2f\" $value }}% (threshold: 80%). Instance: {{ $labels.instance }}"
+
+      - alert: CriticalMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CRITICAL memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ printf \"%.2f\" $value }}% (threshold: 95%). OOM risk - immediate action required."
+
+      # Disk Space Alerts
+      - alert: LowDiskSpace
+        expr: |
+          (node_filesystem_avail_bytes{fstype!="tmpfs",fstype!="fuse.lxcfs"} / node_filesystem_size_bytes) * 100 < 15
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }} ({{ $labels.mountpoint }})"
+          description: "Free disk space is {{ printf \"%.2f\" $value }}% (threshold: 15%). Consider cleanup."
+
+      - alert: CriticalDiskSpace
+        expr: |
+          (node_filesystem_avail_bytes{fstype!="tmpfs",fstype!="fuse.lxcfs"} / node_filesystem_size_bytes) * 100 < 5
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CRITICAL disk space on {{ $labels.instance }} ({{ $labels.mountpoint }})"
+          description: "Free disk space is {{ printf \"%.2f\" $value }}% (threshold: 5%). IMMEDIATE ACTION REQUIRED - data corruption risk."
+
+      # Swap Memory Alerts
+      - alert: HighSwapUsage
+        expr: |
+          (1 - (node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes)) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High swap usage on {{ $labels.instance }}"
+          description: "Swap usage is {{ printf \"%.2f\" $value }}% (threshold: 80%). System may have insufficient real RAM."
+
+      # Network I/O Alerts
+      - alert: HighNetworkTrafficIn
+        expr: |
+          rate(node_network_receive_bytes_total{device!="lo"}[5m]) > 100000000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High inbound network traffic on {{ $labels.instance }} ({{ $labels.device }})"
+          description: "Receive rate: {{ humanize $value }}B/s (threshold: 100MB/s). Possible DDoS or large data transfer."
+
+      - alert: HighNetworkTrafficOut
+        expr: |
+          rate(node_network_transmit_bytes_total{device!="lo"}[5m]) > 100000000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High outbound network traffic on {{ $labels.instance }} ({{ $labels.device }})"
+          description: "Transmit rate: {{ humanize $value }}B/s (threshold: 100MB/s). Possible data exfiltration or large upload."
+
+      # Inode Alerts
+      - alert: HighInodeUsage
+        expr: |
+          (1 - (node_filesystem_files_free / node_filesystem_files)) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High inode usage on {{ $labels.instance }} ({{ $labels.mountpoint }})"
+          description: "Inode usage is {{ printf \"%.2f\" $value }}%. May be unable to create new files soon."
+
+      - alert: CriticalInodeUsage
+        expr: |
+          (1 - (node_filesystem_files_free / node_filesystem_files)) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CRITICAL inode usage on {{ $labels.instance }} ({{ $labels.mountpoint }})"
+          description: "Inode usage is {{ printf \"%.2f\" $value }}%. Cannot create new files - immediate cleanup required."
+
+  - name: prometheus_alerts
+    interval: 1m
+    rules:
+      # Prometheus Scrape Failures
+      - alert: PrometheusScrapeFailing
+        expr: |
+          up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus scrape failure: {{ $labels.instance }}"
+          description: "Job '{{ $labels.job }}' is not responding for 2 minutes. Check if target is online: http://{{ $labels.instance }}"
+
+      # Prometheus Storage Issues
+      - alert: PrometheusLowDiskSpace
+        expr: |
+          predict_linear(node_filesystem_avail_bytes{mountpoint="/prometheus"}[1h], 24*3600) < 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus will run out of disk space in ~24 hours"
+          description: "Free space at /prometheus: {{ humanizeBytes $value }}. Plan disk expansion or enable retention cleanup."
+
+      # Prometheus Config Reload Failures
+      - alert: PrometheusConfigReloadFailures
+        expr: |
+          increase(prometheus_config_last_reload_successful[15m]) == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus config reload failed"
+          description: "Prometheus failed to reload configuration. Check syntax and logs."
+
+  - name: docker_alerts
+    interval: 1m
+    rules:
+      # Container Restart Detection (requires cAdvisor)
+      - alert: ContainerRestartingFrequently
+        expr: |
+          increase(container_last_seen{name!=""}[5m]) > 2
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container restarting frequently: {{ $labels.name }}"
+          description: "Container '{{ $labels.name }}' restarted {{ $value | humanize }} times in 5 minutes. Debug: docker logs {{ $labels.name }} --tail 50"
+
+      # Node Exporter Down Detection
+      - alert: NodeExporterDown
+        expr: |
+          up{job="node-exporter"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Node Exporter offline: {{ $labels.instance }}"
+          description: "Node Exporter at {{ $labels.instance }} has not reported metrics for 2 minutes. Server may be down or process crashed."
+
+      # cAdvisor Down Detection
+      - alert: CAdvisorDown
+        expr: |
+          up{job="cadvisor"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "cAdvisor not responding: {{ $labels.instance }}"
+          description: "cAdvisor at {{ $labels.instance }} has stopped reporting. Container metrics will be unavailable."
+
+  - name: alertmanager_alerts
+    interval: 1m
+    rules:
+      # AlertManager Failures
+      - alert: AlertmanagerDown
+        expr: |
+          up{job="alertmanager"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "AlertManager is down"
+          description: "AlertManager has stopped. Alerts will not be routed to notification channels."
+
+      # AlertManager Config Reload Failures
+      - alert: AlertmanagerConfigReloadFailed
+        expr: |
+          alertmanager_config_last_reload_successful == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "AlertManager config reload failed"
+          description: "AlertManager failed to reload configuration. Check syntax in alertmanager.yml."
